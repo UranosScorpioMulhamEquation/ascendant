@@ -8,6 +8,40 @@ import pytz
 import streamlit as st
 import swisseph as swe
 from timezonefinder import TimezoneFinder
+import uuid
+
+# ==================== 1. Security & License ====================
+KEY_FILE = "license.key"
+
+def get_machine_id():
+    return hex(uuid.getnode())
+
+def generate_password(mid):
+    digits = ''.join(filter(str.isdigit, mid))
+    num = int(digits[:8]) if digits else int(mid.encode().hex(), 16)
+    return str(round(abs(num / 2 * 3.14)))[:6]
+
+if 'authenticated' not in st.session_state:
+    st.session_state['authenticated'] = os.path.exists(KEY_FILE)
+
+if not st.session_state['authenticated']:
+    st.set_page_config(page_title="Security Activation", layout="centered")
+    st.title("🔑 Security Activation")
+    st.warning("Send your Machine ID to programmer email : mulham81ahmed@gmail.com")
+
+    mid = get_machine_id()
+    st.info(f"Machine ID: {mid}")
+    pwd = st.text_input("Enter Activation Key:", type="password")
+    if st.button("Activate"):
+        if pwd == generate_password(mid):
+            with open(KEY_FILE, "w") as f: f.write(pwd)
+            st.session_state['authenticated'] = True
+            st.rerun()
+        else:
+            st.error("Invalid Activation Key.")
+    st.stop()
+
+
 
 # ==========================================
 # 0. تهيئة مسار ملفات الـ Ephemeris
