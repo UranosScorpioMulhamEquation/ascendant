@@ -181,7 +181,7 @@ div[role="option"] span {
 [data-baseweb="tag"] {
     background: #1A1A1A !important;
     border: 1px solid #444444 !important;
-    border-radius: 6px !important;
+    border-radius: 4px !important;
     color: #FFFFFF !important;
 }
 
@@ -320,7 +320,7 @@ input:not([type="date"]):not([type="time"]):not([type="number"]) {
 
 /* الأزرار العادية */
 .stButton > button {
-    background: #171717 !important;
+    background: #0D0D0D !important;
     color: #FFFFFF !important;
     font-weight: 700 !important;
     font-size: 1.05rem !important;
@@ -333,7 +333,7 @@ input:not([type="date"]):not([type="time"]):not([type="number"]) {
 }
 
 .stButton > button:hover {
-    background: #262626 !important;
+    background: #0D0D0D !important;
     color: #FFFFFF !important;
     border-color: #888888 !important;
     transform: translateY(-2px);
@@ -341,7 +341,7 @@ input:not([type="date"]):not([type="time"]):not([type="number"]) {
 
 /* الزر الرئيسي لإطلاق التصحيح */
 .stButton > button[kind="primary"] {
-    background: #000000 !important;
+    background: #0D0D0D !important;
     color: #FFFFFF !important;
     font-size: 1.25rem !important;
     font-weight: 900 !important;
@@ -351,15 +351,15 @@ input:not([type="date"]):not([type="time"]):not([type="number"]) {
 }
 
 .stButton > button[kind="primary"]:hover {
-    background: #E6E6E6 !important;
-    color: #000000 !important;
+    background: #0D0D0D !important;
+    color: #FFFFFF !important;
     box-shadow: 0 8px 30px rgba(255, 255, 255, 0.5) !important;
     transform: translateY(-3px);
 }
 
 /* التنبيهات والمعلومات */
 [data-testid="stAlert"] {
-    background-color: #000000 !important;
+    background-color: #0D0D0D !important;
     border-right: 5px solid #FFFFFF !important;
     border-top: 1px solid #333333 !important;
     border-bottom: 1px solid #333333 !important;
@@ -369,7 +369,7 @@ input:not([type="date"]):not([type="time"]):not([type="number"]) {
 }
 
 [data-testid="stAlert"] * {
-    color: #FFFFFF !important;
+    color: #0D0D0D !important;
 }
 
 /* الأكورديون والقوائم القابلة للتوسيع */
