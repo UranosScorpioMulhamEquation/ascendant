@@ -1,14 +1,294 @@
 import os
 import datetime
-from typing import Tuple, Dict, List, Any, Optional
+import uuid
+from typing import Tuple, Dict, List, Any
 
 import geonamescache
 import pandas as pd
 import pytz
 import streamlit as st
-import swisseph as swe
 from timezonefinder import TimezoneFinder
-import uuid
+
+import engine as E
+
+# ==========================================
+# ستايل الواجهة الاحترافية (كحلي داكن ملكي + ذهبي مشع)
+# ==========================================
+CUSTOM_UI_STYLE = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
+
+/* إعدادات الخط والاتجاه والخلفية العامة */
+html, body, [class*="css"], .stApp {
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif !important;
+    direction: rtl !important;
+    text-align: right !important;
+    background-color: #050B18 !important;
+    color: #F5E096 !important;
+}
+
+/* التدرج الفلكي الفاخر للخلفية */
+.stApp {
+    background: radial-gradient(ellipse at 50% 5%, #0F2044 0%, #071026 50%, #030712 100%) !important;
+    background-attachment: fixed !important;
+}
+
+/* شريط الرأس في ستريمليت */
+header[data-testid="stHeader"] {
+    background: rgba(5, 11, 24, 0.7) !important;
+    backdrop-filter: blur(12px) !important;
+}
+
+/* العناوين الرئيسية والفرعية */
+h1, h2, h3, h4, h5, h6, .stHeading {
+    font-family: 'Cairo', sans-serif !important;
+    font-weight: 800 !important;
+    color: #FFD700 !important;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important;
+    letter-spacing: -0.3px;
+}
+
+h1 {
+    font-size: 2.2rem !important;
+    background: linear-gradient(135deg, #FFF099 0%, #FFD700 50%, #D4AF37 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(255, 215, 0, 0.35);
+    margin-bottom: 18px !important;
+}
+
+h2, h3 {
+    color: #FFDF73 !important;
+    border-right: 4px solid #D4AF37;
+    padding-right: 12px !important;
+    margin-top: 15px !important;
+}
+
+p, span, label, div {
+    color: #F7E1A0;
+}
+
+.stCaption, small, [data-testid="stCaptionContainer"] {
+    color: #D4BA72 !important;
+    font-size: 0.88rem !important;
+    line-height: 1.6 !important;
+}
+
+/* بطاقات الأعمدة وحاويات الإدخال */
+[data-testid="column"] {
+    background: rgba(12, 25, 54, 0.55) !important;
+    border: 1px solid rgba(218, 165, 32, 0.28) !important;
+    border-radius: 14px !important;
+    padding: 20px 22px !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 215, 0, 0.15) !important;
+    transition: all 0.3s ease-in-out !important;
+}
+
+[data-testid="column"]:hover {
+    border-color: rgba(255, 215, 0, 0.5) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(218, 165, 32, 0.15) !important;
+}
+
+/* حقول الإدخال النصية والرقمية والتواريخ */
+input, textarea, [data-baseweb="input"], [data-baseweb="base-input"] {
+    background-color: #0A1630 !important;
+    color: #FFF2B2 !important;
+    border-color: rgba(212, 175, 55, 0.4) !important;
+    border-radius: 9px !important;
+    font-family: 'Cairo', sans-serif !important;
+}
+
+input:focus, textarea:focus, [data-baseweb="input"]:focus-within {
+    border-color: #FFD700 !important;
+    box-shadow: 0 0 14px rgba(255, 215, 0, 0.4) !important;
+}
+
+/* حقول الاختيار المنسدلة */
+[data-baseweb="select"] {
+    background-color: #0A1630 !important;
+    border-radius: 9px !important;
+    color: #FFF2B2 !important;
+}
+
+[data-baseweb="select"] > div {
+    background-color: #0A1630 !important;
+    border-color: rgba(212, 175, 55, 0.4) !important;
+    color: #FFF2B2 !important;
+}
+
+/* نوافذ القوائم المنبثقة */
+div[data-baseweb="popover"], div[data-baseweb="popover"] > div, ul[data-baseweb="menu"] {
+    background-color: #0B1A3B !important;
+    border: 1px solid rgba(255, 215, 0, 0.45) !important;
+    border-radius: 10px !important;
+    color: #FFDF73 !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7) !important;
+}
+
+li[role="option"] {
+    color: #F5E096 !important;
+    background-color: transparent !important;
+    transition: all 0.2s ease;
+}
+
+li[role="option"]:hover, li[aria-selected="true"] {
+    background-color: #173268 !important;
+    color: #FFD700 !important;
+    font-weight: 700 !important;
+}
+
+/* وسم الاختيارات المتعددة */
+[data-baseweb="tag"] {
+    background: linear-gradient(135deg, #1C3566 0%, #112349 100%) !important;
+    border: 1px solid #D4AF37 !important;
+    border-radius: 6px !important;
+    color: #FFD700 !important;
+}
+
+[data-baseweb="tag"] span {
+    color: #FFD700 !important;
+}
+
+/* بطاقات النتائج الإحصائية الفلكية */
+[data-testid="stMetric"] {
+    background: linear-gradient(145deg, #0F2044 0%, #081228 100%) !important;
+    border: 1px solid rgba(218, 165, 32, 0.45) !important;
+    border-radius: 12px !important;
+    padding: 16px 20px !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 215, 0, 0.2) !important;
+    text-align: center !important;
+}
+
+[data-testid="stMetricValue"] {
+    color: #FFD700 !important;
+    font-size: 1.65rem !important;
+    font-weight: 900 !important;
+    text-shadow: 0 0 14px rgba(255, 215, 0, 0.4) !important;
+    display: flex;
+    justify-content: center;
+}
+
+[data-testid="stMetricLabel"] {
+    color: #FCE69C !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    display: flex;
+    justify-content: center;
+}
+
+/* الأزرار العادية والأساسية */
+.stButton > button {
+    background: linear-gradient(135deg, #D4AF37 0%, #AA7A1E 100%) !important;
+    color: #060D1D !important;
+    font-weight: 800 !important;
+    font-size: 1.05rem !important;
+    border: 1px solid #FFE57F !important;
+    border-radius: 10px !important;
+    padding: 0.6rem 2rem !important;
+    box-shadow: 0 4px 18px rgba(212, 175, 55, 0.3) !important;
+    transition: all 0.3s ease !important;
+    font-family: 'Cairo', sans-serif !important;
+}
+
+.stButton > button:hover {
+    background: linear-gradient(135deg, #FFDF73 0%, #E5BE3B 100%) !important;
+    color: #040814 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(255, 215, 0, 0.6) !important;
+    border-color: #FFFFFF !important;
+}
+
+/* الزر الرئيسي لإطلاق التصحيح */
+.stButton > button[kind="primary"] {
+    background: linear-gradient(135deg, #FFD700 0%, #E5B83B 50%, #B8860B 100%) !important;
+    color: #050B17 !important;
+    font-size: 1.25rem !important;
+    font-weight: 900 !important;
+    padding: 0.8rem 3rem !important;
+    box-shadow: 0 6px 28px rgba(255, 215, 0, 0.45) !important;
+    border: 1px solid #FFF2A3 !important;
+}
+
+.stButton > button[kind="primary"]:hover {
+    background: linear-gradient(135deg, #FFF099 0%, #FFD700 60%, #E5B83B 100%) !important;
+    box-shadow: 0 8px 35px rgba(255, 215, 0, 0.75) !important;
+    transform: translateY(-3px);
+}
+
+/* صناديق التنبيهات والمعلومات والتحذيرات */
+[data-testid="stAlert"] {
+    background-color: #091736 !important;
+    border-right: 5px solid #FFD700 !important;
+    border-top: 1px solid rgba(255, 215, 0, 0.3) !important;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3) !important;
+    border-left: 1px solid rgba(255, 215, 0, 0.3) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35) !important;
+}
+
+[data-testid="stAlert"] * {
+    color: #FFDF73 !important;
+}
+
+/* محرر البيانات والجداول */
+[data-testid="stDataFrame"], [data-testid="stDataEditor"] {
+    background-color: #08132B !important;
+    border: 1px solid rgba(212, 175, 55, 0.4) !important;
+    border-radius: 12px !important;
+    padding: 8px !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* الأكورديون والقوائم القابلة للتوسيع */
+[data-testid="stExpander"] {
+    background: #09152E !important;
+    border: 1px solid rgba(212, 175, 55, 0.35) !important;
+    border-radius: 10px !important;
+    margin-bottom: 10px !important;
+}
+
+[data-testid="stExpander"] details summary {
+    color: #FFDF73 !important;
+    font-weight: 700 !important;
+}
+
+[data-testid="stExpander"] details summary:hover {
+    color: #FFD700 !important;
+}
+
+/* أشرطة التمرير والمنزلقات */
+[data-testid="stSlider"] div[role="slider"] {
+    background-color: #FFD700 !important;
+    border: 2px solid #060D1D !important;
+    box-shadow: 0 0 12px #FFD700 !important;
+}
+
+/* الفواصل الأفقية المزخرفة بالذهب */
+hr {
+    border: none !important;
+    height: 1.5px !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.7), transparent) !important;
+    margin: 28px 0 !important;
+}
+
+/* تخصيص شريط التمرير الدقيق */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #050B17;
+}
+::-webkit-scrollbar-thumb {
+    background: #8A6F27;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #FFD700;
+}
+</style>
+"""
 
 # ==================== 1. Security (Fixed) ====================
 KEY_FILE = "license.key"
@@ -19,7 +299,7 @@ def get_machine_id():
 def generate_password(mid):
     # مطابقة تامة لمنطق أداة فك الحماية الثابتة
     digits = ''.join(filter(str.isdigit, mid))
-    if not digits: 
+    if not digits:
         try:
             digits = str(int(mid, 16))
         except:
@@ -33,25 +313,27 @@ if 'authenticated' not in st.session_state:
 
 if not st.session_state['authenticated']:
     st.set_page_config(page_title="Security", layout="centered")
+    st.markdown(CUSTOM_UI_STYLE, unsafe_allow_html=True)
     st.title("Security Activation - Ask the programmer for your password")
     st.warning("Send your Machine ID to programmer email : mulham81ahmed@gmail.com ")
 
     mid = get_machine_id()
     st.info(f"Machine ID: {mid}")
     pwd = st.text_input("Enter Activation Key:", type="password")
-    
+
     if st.button("Activate"):
         if pwd == generate_password(mid):
-            with open(KEY_FILE, "w") as f: 
+            with open(KEY_FILE, "w") as f:
                 f.write(pwd)
             st.session_state['authenticated'] = True
             st.rerun()
         else:
             st.error("Invalid Activation Key.")
-            
+
     st.stop()
 
-
+st.set_page_config(page_title="نظام تصحيح الطالع المتقدم", layout="wide")
+st.markdown(CUSTOM_UI_STYLE, unsafe_allow_html=True)
 
 # ==========================================
 # 0. تهيئة مسار ملفات الـ Ephemeris
@@ -60,29 +342,27 @@ EPHE_PATH = "./ephe"
 if not os.path.exists(EPHE_PATH):
     os.makedirs(EPHE_PATH)
 
-swe.set_ephe_path(EPHE_PATH)
+@st.cache_resource
+def get_eph() -> E.SwissEphemeris:
+    return E.SwissEphemeris(EPHE_PATH)
 
 # ==========================================
-# 1. خدمات البيانات الجغرافية والزمنية والفلكية
+# 1. البيانات الجغرافية
 # ==========================================
 @st.cache_data
-def load_geo_data() -> Tuple[geonamescache.GeonamesCache, Dict[str, str], List[str], Dict[str, List[Dict[str, Any]]]]:
+def load_geo_data():
     gc = geonamescache.GeonamesCache()
     countries = gc.get_countries()
     cities = gc.get_cities()
-
     country_map = {c["name"]: code for code, c in countries.items()}
     sorted_countries = sorted(list(country_map.keys()))
-
     cities_by_country: Dict[str, List[Dict[str, Any]]] = {}
     for c_code in country_map.values():
         c_cities = [city for city in cities.values() if city["countrycode"] == c_code]
-        c_cities_sorted = sorted(c_cities, key=lambda x: x["population"], reverse=True)
-        cities_by_country[c_code] = c_cities_sorted
+        cities_by_country[c_code] = sorted(c_cities, key=lambda x: x["population"], reverse=True)
+    return country_map, sorted_countries, cities_by_country
 
-    return gc, country_map, sorted_countries, cities_by_country
-
-gc, country_map, country_list, cities_by_country = load_geo_data()
+country_map, country_list, cities_by_country = load_geo_data()
 
 @st.cache_resource
 def get_tz_finder() -> TimezoneFinder:
@@ -90,257 +370,215 @@ def get_tz_finder() -> TimezoneFinder:
 
 tf = get_tz_finder()
 
-def get_utc_julian_day(date_obj: datetime.date, time_obj: datetime.time, tz_str: str) -> float:
-    local_tz = pytz.timezone(tz_str)
-    dt = datetime.datetime.combine(date_obj, time_obj)
-    local_dt = local_tz.localize(dt)
-    utc_dt = local_dt.astimezone(pytz.utc)
-    return swe.julday(
-        utc_dt.year,
-        utc_dt.month,
-        utc_dt.day,
-        utc_dt.hour + utc_dt.minute / 60.0 + utc_dt.second / 3600.0,
-    )
-
-def get_zodiac_sign(degree: float) -> str:
-    """تحويل الدرجة القوسية (0-360) إلى اسم البرج الفلكي"""
-    signs = [
-        "الحمل", "الثور", "الجوزاء", "السرطان", 
-        "الأسد", "العذراء", "الميزان", "العقرب", 
-        "القوس", "الجدي", "الدلو", "الحوت"
-    ]
-    index = int(degree // 30) % 12
-    return signs[index]
+def make_to_utc(tz_str: str):
+    tz = pytz.timezone(tz_str)
+    def f(naive: datetime.datetime) -> datetime.datetime:
+        return tz.localize(naive, is_dst=False).astimezone(pytz.utc).replace(tzinfo=None)
+    return f
 
 # ==========================================
-# 2. قواميس الأحداث الفلكية المحدثة (شاملة الصورة المرفقة)
+# 2. النوافذ الزمنية الثمانية (3 ساعات لكل نافذة)
 # ==========================================
-EVENTS_DICT = {
-    "السفر": {"angles": ["MC", "AS"], "planets": [1, 2, 7, 5]},
-    "موت الاب او الجد": {"angles": ["MC", "AS"], "planets": [6, 0, 8, 9, 4, 11]},
-    "موت الام او الجدة": {"angles": ["IC", "AS"], "planets": [1, 3, 6, 8, 9, 11, 4]},
-    "موت الابن": {"angles": ["IC", "DS"], "planets": [4, 6, 8, 9, 11]},
-    "موت الابنة": {"angles": ["IC", "DS"], "planets": [3, 1, 8, 9, 11]},
-    "ولادة ابن": {"angles": ["AS", "IC"], "planets": [4, 0, 5, 10]},
-    "ولادة ابنة": {"angles": ["AS", "IC"], "planets": [3, 1, 5, 10]},
-    "تاريخ الزواج/عقد القران": {"angles": ["DS", "MC"], "planets": [3, 1, 10, 5, 0, 4]},
-    "عملية جراحية بمشفى": {"angles": ["AS", "MC"], "planets": [6, 8, 4]},
-    "ولادة أخ أصغر": {"angles": ["H3", "IC", "DS"], "planets": [2, 5, 0, 1, 3, 10, 7, 9]},
-    "ولادة أخت صغرى": {"angles": ["H3", "IC", "DS"], "planets": [1, 2, 3, 0, 5, 10, 7, 9]}
-}
-
-PLANET_NAMES = {
-    0: "الشمس", 1: "القمر", 2: "عطارد", 3: "الزهرة", 4: "المريخ", 
-    5: "المشتري", 6: "زحل", 7: "أورانوس", 8: "نبتون", 9: "بلوتو", 
-    10: "راهو (العقدة الشمالية)", 11: "كيتو (العقدة الجنوبية)"
+WINDOWS = {
+    "من 7 ص إلى 10 ص  (07–10)": 7,
+    "من 10 ص إلى 1 م  (10–13)": 10,
+    "من 1 م إلى 4 م  (13–16)": 13,
+    "من 4 م إلى 7 م  (16–19)": 16,
+    "من 7 م إلى 10 م  (19–22)": 19,
+    "من 10 م إلى 1 فجرًا  (22–01)": 22,
+    "من 1 فجرًا إلى 4 فجرًا  (01–04)": 1,
+    "من 4 فجرًا إلى 7 ص  (04–07)": 4,
 }
 
 # ==========================================
-# 3. الدوال الفلكية وتحليل الخرائط الثلاث
+# 3. الواجهة
 # ==========================================
-def get_planet_positions(jd: float) -> Dict[int, float]:
-    positions = {}
-    for p in range(10):
-        pos, ret = swe.calc_ut(jd, p)
-        positions[p] = pos[0]
-    
-    rahu_pos, _ = swe.calc_ut(jd, swe.MEAN_NODE)
-    positions[10] = rahu_pos[0]
-    positions[11] = (rahu_pos[0] + 180.0) % 360.0
-    return positions
-
-def get_angles(jd: float, lat: float, lon: float) -> Dict[str, float]:
-    houses, ascmc = swe.houses(jd, lat, lon, b'W')
-    as_deg = ascmc[0]
-    mc_deg = ascmc[1]
-    return {
-        "AS": as_deg,
-        "MC": mc_deg,
-        "DS": (as_deg + 180.0) % 360.0,
-        "IC": (mc_deg + 180.0) % 360.0,
-        "H3": houses[2]  # وتد البيت الثالث للدلالة على الإخوة والأخوات
-    }
-
-def hierarchical_rectification(birth_date, approx_time, event_date, event_type, lat, lon, tz_str):
-    target_angles = EVENTS_DICT[event_type]["angles"]
-    target_planets = EVENTS_DICT[event_type]["planets"]
-    
-    age_years = (event_date - birth_date).days / 365.2425
-    
-    # حساب الأقواس الشمسية
-    jd_birth_approx = get_utc_julian_day(birth_date, approx_time, tz_str)
-    jd_event = get_utc_julian_day(event_date, datetime.time(12, 0), tz_str)
-    
-    sun_birth, _ = swe.calc_ut(jd_birth_approx, 0)
-    sun_event, _ = swe.calc_ut(jd_event, 0)
-    solar_arc = (sun_event[0] - sun_birth[0]) % 360.0
-
-    # النطاق الزمني الصحيح: ساعة قبل وساعة بعد الساعة المدخلة (±1 ساعة)
-    base_dt = datetime.datetime.combine(birth_date, approx_time)
-    start_dt = base_dt - datetime.timedelta(hours=1)
-    end_dt = base_dt + datetime.timedelta(hours=1)
-
-    max_orb_limit = 0.50  # الحد الأقصى للسماحية حتى 0.50 درجة
-
-    # ----------------------------------------------------
-    # المرحلة الأولى: خريطة اتجاهات الأقواس الشمسية (تحديد الساعة بدقة)
-    # ----------------------------------------------------
-    best_hour = approx_time.hour
-    min_sa_orb = float('inf')
-    
-    current_dt = start_dt
-    while current_dt <= end_dt:
-        jd = get_utc_julian_day(current_dt.date(), current_dt.time(), tz_str)
-        natal_angles = get_angles(jd, lat, lon)
-        natal_planets = get_planet_positions(jd)
-        
-        prog_angles = {k: (v + solar_arc) % 360.0 for k, v in natal_angles.items()}
-        
-        for angle_name in target_angles:
-            if angle_name in prog_angles:
-                p_angle = prog_angles[angle_name]
-                for p_id in target_planets:
-                    n_planet = natal_planets[p_id]
-                    diff = abs((p_angle - n_planet + 180) % 360 - 180)
-                    if diff < min_sa_orb and diff <= max_orb_limit:
-                        min_sa_orb = diff
-                        best_hour = current_dt.hour
-        current_dt += datetime.timedelta(minutes=1)
-
-    # ----------------------------------------------------
-    # المرحلة الثانية: خريطة الثانوية التقدمية (تحديد الدقيقة)
-    # ----------------------------------------------------
-    best_minute = approx_time.minute
-    min_sp_orb = float('inf')
-    
-    for minute in range(60):
-        trial_time = datetime.time(best_hour, minute, 0)
-        jd_trial = get_utc_julian_day(birth_date, trial_time, tz_str)
-        
-        jd_prog = jd_trial + age_years
-        prog_planets = get_planet_positions(jd_prog)
-        natal_angles = get_angles(jd_trial, lat, lon)
-        
-        for angle_name in target_angles:
-            if angle_name in natal_angles:
-                n_angle = natal_angles[angle_name]
-                for p_id in target_planets:
-                    p_planet = prog_planets[p_id]
-                    diff = abs((p_planet - n_angle + 180) % 360 - 180)
-                    if diff < min_sp_orb and diff <= max_orb_limit:
-                        min_sp_orb = diff
-                        best_minute = minute
-
-    # ----------------------------------------------------
-    # المرحلة الثالثة: خريطة العبور (تحديد الثانية)
-    # ----------------------------------------------------
-    best_second = 0
-    min_tr_orb = float('inf')
-    transit_planets = get_planet_positions(jd_event)
-    
-    for second in range(60):
-        trial_time = datetime.time(best_hour, best_minute, second)
-        jd_trial = get_utc_julian_day(birth_date, trial_time, tz_str)
-        natal_angles = get_angles(jd_trial, lat, lon)
-        
-        for angle_name in target_angles:
-            if angle_name in natal_angles:
-                n_angle = natal_angles[angle_name]
-                for p_id in target_planets:
-                    t_planet = transit_planets[p_id]
-                    diff = abs((t_planet - n_angle + 180) % 360 - 180)
-                    if diff < min_tr_orb and diff <= max_orb_limit:
-                        min_tr_orb = diff
-                        best_second = second
-
-    final_time = datetime.time(best_hour, best_minute, best_second)
-    final_jd = get_utc_julian_day(birth_date, final_time, tz_str)
-    final_angles = get_angles(final_jd, lat, lon)
-    asc_deg = final_angles["AS"]
-    zodiac_name = get_zodiac_sign(asc_deg)
-
-    return {
-        "time": final_time,
-        "ascendant": asc_deg,
-        "mc_degree": final_angles["MC"],
-        "zodiac": zodiac_name,
-        "orbs": {
-            "solar_arc": min_sa_orb,
-            "secondary": min_sp_orb,
-            "transit": min_tr_orb
-        }
-    }
-
-# ==========================================
-# 4. واجهة المستخدم (Streamlit)
-# ==========================================
-st.set_page_config(page_title="نظام تصحيح الطالع المتقدم", layout="wide")
-st.title("نظام تصحيح الطالع الفلكي و ساعة الميلاد - استرو رادار")
-st.write("التحليل وفق خرائط  (اتجاهات الأقواس الشمسية) + (التقدمية الثانوية) + (العبور) - برمجة الفلكي الدكتور ملهم احمد")
+st.title("نظام تصحيح الطالع الفلكي و درجته و ساعة الميلاد - من أحداث الماضي")
+st.write("التسيير بالاتجاهات الأولية + الأقواس الشمسية + التقدمية الثانوية + العبور") 
+st.write("تطوير الفلكي استرو رادار")
 st.markdown("---")
 
-with st.container():
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("بيانات المولود")
-        name = st.text_input("اسم الشخص:", "أحمد")
-        gender = st.selectbox("الجنس", ["ذكر", "أنثى"])
-        birth_date = st.date_input("تاريخ الميلاد:", min_value=datetime.date(1900, 1, 1), max_value=datetime.date.today())
-        approx_time = st.time_input("ساعة الميلاد التقريبية (± 1 ساعة)", datetime.time(11, 32), step=datetime.timedelta(minutes=12))
+col1, col2 = st.columns(2)
+with col1:
+    st.subheader("بيانات المولود")
+    name = st.text_input("اسم الشخص:", "أحمد")
+    gender_ar = st.selectbox("الجنس", ["ذكر", "أنثى"])
+    gender = 'M' if gender_ar == "ذكر" else 'F'
+    birth_date = st.date_input("تاريخ الميلاد:", value=datetime.date(1990, 1, 1),
+                               min_value=datetime.date(1900, 1, 1), max_value=datetime.date.today())
+    win_label = st.selectbox("نطاق الساعة (3 ساعات تحوي ساعة الميلاد الحقيقية)", list(WINDOWS.keys()), index=1)
+    start_hour = WINDOWS[win_label]
+    anchor = 'forward'
+    if start_hour == 22:
+        anchor_ar = st.radio("هذه النافذة تعبر منتصف الليل — ما معنى تاريخ الميلاد المُدخل؟",
+                             ["22:00 في هذا التاريخ ← 01:00 صباح اليوم التالي",
+                              "22:00 من اليوم السابق ← 01:00 صباح هذا التاريخ"])
+        anchor = 'forward' if anchor_ar.startswith("22:00 في") else 'backward'
 
-    with col2:
-        st.subheader("مكان الميلاد (تلقائي)")
-        selected_country = st.selectbox("بلد الميلاد", country_list, index=country_list.index("Egypt") if "Egypt" in country_list else 0)
-        
-        c_code = country_map[selected_country]
-        country_cities = cities_by_country.get(c_code, [])
-        city_names = [city["name"] for city in country_cities]
-        
-        if not city_names:
-            st.error("لم يتم العثور على مدن لهذا البلد في قاعدة البيانات.")
-            st.stop()
-            
-        selected_city_name = st.selectbox("مدينة الميلاد (مرتبة حسب الكثافة السكانية)", city_names)
-        
-        selected_city_data = next(city for city in country_cities if city["name"] == selected_city_name)
-        lat = selected_city_data["latitude"]
-        lon = selected_city_data["longitude"]
-        
-        tz_str = tf.timezone_at(lng=lon, lat=lat) or "UTC"
-        st.info(f"📍 الإحداثيات: عرض {lat:.4f} | طول {lon:.4f}")
-        st.info(f"🕒 المنطقة الزمنية التلقائية: {tz_str}")
+with col2:
+    st.subheader("مكان الميلاد")
+    selected_country = st.selectbox("بلد الميلاد", country_list,
+                                    index=country_list.index("Egypt") if "Egypt" in country_list else 0)
+    country_cities = cities_by_country.get(country_map[selected_country], [])
+    city_names = [c["name"] for c in country_cities]
+    manual = st.checkbox("إدخال الإحداثيات يدويًا (أدق — ستاديا ص71 يشدد على الإحداثيات الدقيقة)")
+    if manual or not city_names:
+        lat = st.number_input("خط العرض (شمال +)", value=30.0444, format="%.4f")
+        lon = st.number_input("خط الطول (شرق +)", value=31.2357, format="%.4f")
+    else:
+        city = st.selectbox("مدينة الميلاد (مرتبة حسب الكثافة السكانية)", city_names)
+        cd = next(c for c in country_cities if c["name"] == city)
+        lat, lon = cd["latitude"], cd["longitude"]
+    tz_default = tf.timezone_at(lng=lon, lat=lat) or "UTC"
+    tz_str = st.text_input("المنطقة الزمنية (IANA)", tz_default)
+    st.info(f"📍 عرض {lat:.4f} | طول {lon:.4f} | 🕒 {tz_str}")
 
 st.divider()
-st.subheader("بيانات الحدث (خلال الأعوام 2022 - 2026)")
-col3, col4 = st.columns(2)
-with col3:
-    event_type = st.selectbox("اختر نوع الحدث من القاموس", list(EVENTS_DICT.keys()))
-with col4:
-    min_event_date = datetime.date(2022, 1, 1)
-    max_event_date = datetime.date(2026, 12, 31)
-    st.caption("ملاحظة: النطاق الزمني مدعوم للأعوام 2022 حتى 2026.")
-    event_date = st.date_input("تاريخ وقوع الحدث الماضي", min_value=min_event_date, max_value=max_event_date, value=datetime.date(2025, 6, 1))
+st.subheader("أحداث الماضي")
+st.caption("أضف كل حدث مؤرَّخ تعرفه (وفاة، ولادة، زواج، عملية، سفر…). كلما زاد العدد وقلّ الغموض ارتفعت الدقة: "
+           "ستاديا يوصي بـ 14–16 حدثًا مهمًا لبحث 2–3 ساعات، وحدث واحد لا يكفي لتمييز وقت واحد عن غيره. "
+           "ساعة الحدث اختيارية (إن تُركت فارغة تُستبعد عبورات القمر).")
 
-if st.button("بدء التصحيح الهرمي للخرائط الثلاث 🚀"):
-    if event_date <= birth_date:
-        st.error("❌ تاريخ الحدث يجب أن يكون بعد تاريخ الميلاد.")
-    else:
-        with st.spinner("جاري المسح الدقيق للنطاق (ساعة قبل/بعد) ومعالجة الخرائط الثلاث بالتسلسل..."):
-            res = hierarchical_rectification(birth_date, approx_time, event_date, event_type, lat, lon, tz_str)
-            
-            if res:
-                st.success("  تم إنجاز التصحيح الفلكي التام بنجاح ✅ - مع العلم أن الدقة +/- 3 درجات للطالع أو +/-12 دقيقة!")
-                
-                st.markdown(f"### 🕒 وقت الميلاد الدقيق المصحح (بالساعة والدقيقة والثانية): **{res['time'].strftime('%H:%M:%S')}**")
-                st.markdown(f"#### 🎯 درجة الطالع (Ascendant Degree): **{res['ascendant']:.4f}°**")
-                st.markdown(f"#### ♈ اسم الطالع (Ascendant Sign): **برج {res['zodiac']}**")
-                st.markdown(f"#### ⛰️ درجة وتد السماء (MC): **{res['mc_degree']:.4f}°**")
-                
-                st.info(
-                    f"**تقرير المطابقة الفلكية والدقة:**\n"
-                    f"- **الساعة المستخرجة (الأقواس الشمسية):** {res['time'].hour:02d}:00 (دقة الفارق: {res['orbs']['solar_arc']:.4f}°)\n"
-                    f"- **الدقيقة المستخرجة (التقدمية الثانوية):** :{res['time'].minute:02d} (دقة الفارق: {res['orbs']['secondary']:.4f}°)\n"
-                    f"- **الثانية المستخرجة (العبور الفلكي):** :{res['time'].second:02d} (دقة الفارق: {res['orbs']['transit']:.4f}°)"
-                )
-            else:
-                st.warning("⚠️ لم يتم العثور على مطابقة ضمن نطاق السماحية المحددة (0.50 درجة). يرجى التأكد من صحة تاريخ الحدث أو ضبط ساعة الميلاد التقريبية.")
+kinds = list(E.EVENT_TYPES.keys())
+if 'events_df' not in st.session_state:
+    st.session_state['events_df'] = pd.DataFrame({
+        "نوع الحدث": [kinds[0]],
+        "التاريخ": [datetime.date(2025, 6, 1)],
+        "الساعة (اختياري)": [None],
+        "الوزن": [1.0],
+    })
+
+events_df = st.data_editor(
+    st.session_state['events_df'], num_rows="dynamic", use_container_width=True, key="ev_editor",
+    column_config={
+        "نوع الحدث": st.column_config.SelectboxColumn(options=kinds, required=True),
+        "التاريخ": st.column_config.DateColumn(min_value=datetime.date(1900, 1, 1), max_value=datetime.date.today()),
+        "الساعة (اختياري)": st.column_config.TimeColumn(),
+        "الوزن": st.column_config.NumberColumn(min_value=0.1, max_value=3.0, step=0.1, default=1.0,
+                                               help="1 = عادي، 2 = حدث مؤكد التاريخ والأهمية"),
+    },
+)
+
+st.divider()
+c1, c2, c3 = st.columns(3)
+with c1:
+    step_s = st.select_slider("دقة المسح (ثانية بين كل مرشّح وآخر)", options=[4, 8, 12, 20, 30], value=8)
+with c2:
+    tech_labels = {"اتجاهات أولية (توبوسنتريك)": 'PD', "تسيير ثانوي (تقدمية)": 'SD',
+                   "أقواس شمسية": 'SA', "عبور (مباشر وما قبل الولادة)": 'TR'}
+    chosen = st.multiselect("الخرائط المستخدمة", list(tech_labels.keys()), default=list(tech_labels.keys()))
+with c3:
+    do_null = st.checkbox("اختبار الدلالة الإحصائية (أبطأ)", value=False,
+                          help="يعيد الحساب بتواريخ أحداث مُزاحة عشوائيًا ليُظهر كم مرة يظهر تطابق بهذا الحجم بالصدفة")
+    null_runs = st.slider("عدد المحاكاة", 10, 60, 20) if do_null else 0
+
+if st.button("بدء التصحيح 🚀", type="primary"):
+    rows = events_df.dropna(subset=["نوع الحدث", "التاريخ"])
+    errors = []
+    if rows.empty:
+        errors.append("أضف حدثًا واحدًا على الأقل.")
+    try:
+        pytz.timezone(tz_str)
+    except Exception:
+        errors.append("المنطقة الزمنية غير صحيحة.")
+    if not chosen:
+        errors.append("اختر خريطة واحدة على الأقل.")
+    to_utc = None
+    events: List[E.Event] = []
+    if not errors:
+        to_utc = make_to_utc(tz_str)
+        for _, r in rows.iterrows():
+            d = r["التاريخ"]
+            if isinstance(d, pd.Timestamp):
+                d = d.date()
+            elif isinstance(d, str):
+                try:
+                    d = pd.to_datetime(d).date()
+                except Exception:
+                    pass
+            if d <= birth_date:
+                errors.append(f"حدث «{r['نوع الحدث']}» بتاريخ {d} ليس بعد الميلاد.")
+                continue
+
+            # معالجة حقل الساعة وتحويل النصوص إلى datetime.time
+            t = r["الساعة (اختياري)"]
+            if t is None or (isinstance(t, float) and pd.isna(t)) or pd.isna(t):
+                t = None
+            elif isinstance(t, str):
+                t_str = t.strip()
+                if not t_str:
+                    t = None
+                else:
+                    try:
+                        t = datetime.time.fromisoformat(t_str)
+                    except ValueError:
+                        try:
+                            t = pd.to_datetime(t_str).time()
+                        except Exception:
+                            t = None
+            elif isinstance(t, (datetime.datetime, pd.Timestamp)):
+                t = t.time()
+            elif not isinstance(t, datetime.time):
+                t = None
+
+            w = r["الوزن"] if pd.notna(r["الوزن"]) else 1.0
+            events.append(E.make_event(r["نوع الحدث"], d, t, to_utc, w))
+    for e in errors:
+        st.error("❌ " + e)
+
+    if not errors:
+        if len(events) < 3:
+            st.warning("⚠️ عدد الأحداث قليل (أقل من 3). ستظهر نتائج لكن احتمال تطابقها بالصدفة مرتفع — "
+                       "اعتبرها ترشيحًا لا تصحيحًا نهائيًا.")
+        with st.spinner("جاري مسح النافذة وحساب الخرائط الأربع لكل مرشّح..."):
+            res = E.rectify(get_eph(), birth_date, lat, lon, to_utc, events, gender, start_hour,
+                            span_hours=3.0, step_s=step_s, anchor=anchor,
+                            techniques=[tech_labels[c] for c in chosen], n_peaks=5, null_runs=null_runs)
+        cands = res["candidates"]
+        if not cands:
+            st.warning("لم يُعثر على أي تطابق ضمن سماحيات الكتاب. راجع تواريخ الأحداث أو النافذة الزمنية.")
+        else:
+            top = cands[0]
+            pts = top["points"]
+            st.success("اكتمل التحليل ✅")
+            st.markdown(f"### 🕒 أرجح وقت ميلاد محلي: **{top['time'].strftime('%H:%M:%S')}** "
+                        f"({top['time'].strftime('%Y-%m-%d')})")
+            m1, m2, m3 = st.columns(3)
+            m1.metric("🎯 الطالع AS", E.describe_lon(pts["asc"]))
+            m2.metric("⛰️ وتد السماء MC", E.describe_lon(pts["mc"]))
+            m3.metric("🧭 النقطة الشرقية EP", E.describe_lon(pts["ep"]))
+            st.caption(f"RAMC = {pts['ramc']:.4f}° ؛ RA(EP) = RAMC + 90° = {pts['ra_ep']:.4f}° "
+                       f"(EP دالّة في RAMC وحده؛ كل 4 دقائق من الوقت ≈ 1° في EP والـMC، "
+                       f"أما الطالع فيتغير بمعدل يعتمد على خط العرض والبرج).")
+
+            if len(cands) > 1:
+                ratio = top["score"] / max(cands[1]["score"], 1e-9)
+                st.info(f"عرض هضبة التطابق حول الوقت الأول ≈ {top['plateau_s']} ثانية. "
+                        f"نسبة نقاط الأول إلى الثاني = {ratio:.2f} "
+                        f"({'تمييز جيد' if ratio >= 1.25 else 'تمييز ضعيف — أضف أحداثًا' if ratio < 1.1 else 'تمييز متوسط'}).")
+            if res["null"]:
+                n = res["null"]
+                st.info(f"اختبار الصدفة ({n['runs']} محاكاة): أعلى نقاط حقيقية = {n['real']:.1f} مقابل "
+                        f"متوسط {n['null_mean']:.1f} وأعلى 95٪ = {n['null_p95']:.1f} في الأحداث المُزاحة؛ "
+                        f"القيمة التقريبية p ≈ {n['p']:.3f}.")
+
+            st.subheader("المرشحون (مرتبون بالنقاط)")
+            table = pd.DataFrame([{
+                "الترتيب": i + 1, "الوقت المحلي": c["time"].strftime("%Y-%m-%d %H:%M:%S"),
+                "النقاط": round(c["score"], 1), "الطالع": E.describe_lon(c["points"]["asc"]),
+                "MC": E.describe_lon(c["points"]["mc"]), "EP": E.describe_lon(c["points"]["ep"]),
+                "هضبة (ث)": c["plateau_s"],
+            } for i, c in enumerate(cands)])
+            st.dataframe(table, use_container_width=True, hide_index=True)
+
+            st.subheader("تفصيل التطابقات للمرشح الأول")
+            for ev, hits in top["detail"]:
+                with st.expander(f"{ev.label} — {len(hits)} تطابق"):
+                    if not hits:
+                        st.write("لا تطابقات ضمن السماحيات لهذا الحدث عند هذا الوقت.")
+                    for h in hits[:15]:
+                        st.write(f"• [{h.tech}] {h.text} — فارق {h.orb:.1f}′ — {h.score:.1f} نقطة")
+
+            st.caption("ملاحظات: الدقة تتحدد بعدد الأحداث وجودتها وصحة تاريخها، لا بالبرنامج وحده. "
+                       "المنطقة الزمنية التاريخية (DST/LMT) قد تحمل خطأ في التواريخ القديمة. "
+                       "المحرك مختبَر لنصف الكرة الشمالي.")
