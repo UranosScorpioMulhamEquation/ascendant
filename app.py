@@ -359,7 +359,7 @@ input:not([type="date"]):not([type="time"]):not([type="number"]) {
 
 /* التنبيهات والمعلومات */
 [data-testid="stAlert"] {
-    background-color: #0D0D0D !important;
+    background-color: #000000 !important;
     border-right: 5px solid #FFFFFF !important;
     border-top: 1px solid #333333 !important;
     border-bottom: 1px solid #333333 !important;
