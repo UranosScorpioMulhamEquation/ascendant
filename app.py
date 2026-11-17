@@ -341,8 +341,8 @@ input:not([type="date"]):not([type="time"]):not([type="number"]) {
 
 /* الزر الرئيسي لإطلاق التصحيح */
 .stButton > button[kind="primary"] {
-    background: #FFFFFF !important;
-    color: #000000 !important;
+    background: #000000 !important;
+    color: #FFFFFF !important;
     font-size: 1.25rem !important;
     font-weight: 900 !important;
     padding: 0.8rem 3rem !important;
