@@ -318,6 +318,17 @@ input:not([type="date"]):not([type="time"]):not([type="number"]) {
     justify-content: center;
 }
 
+div.stDownloadButton > button {
+    background-color: #000000 !important;
+    color: #FFFFFF !important;
+    border: 1px solid #FFFFFF !important;
+}
+
+div.stDownloadButton > button:hover {
+    background-color: #222222 !important;
+    color: #FFFFFF !important;
+    border-color: #FFFFFF !important;
+}
 /* الأزرار العادية */
 .stButton > button {
     background: #0D0D0D !important;
