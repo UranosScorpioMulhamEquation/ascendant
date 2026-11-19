@@ -15,45 +15,47 @@ import pytz
 import streamlit as st
 import streamlit.components.v1 as components
 from timezonefinder import TimezoneFinder
-# ==================== 1. Security (Fixed) ====================
+
+# ==================== إعدادات الأمان ونظام الترخيص ====================
 KEY_FILE = "license.key"
 
-def get_machine_id():
+
+def get_machine_id() -> str:
     return hex(uuid.getnode())
 
-def generate_password(mid):
-    # مطابقة تامة لمنطق أداة فك الحماية الثابتة
+
+def generate_password(mid: str) -> str:
     digits = ''.join(filter(str.isdigit, mid))
     if not digits:
         try:
             digits = str(int(mid, 16))
-        except:
+        except Exception:
             return "Error"
     num = int(digits)
     result = round(abs(num / 2 * 3.14))
     return str(result)[:6]
 
+
 if 'authenticated' not in st.session_state:
     st.session_state['authenticated'] = os.path.exists(KEY_FILE)
 
 if not st.session_state['authenticated']:
-    st.set_page_config(page_title="Security", layout="centered")
-    st.markdown(CUSTOM_UI_STYLE, unsafe_allow_html=True)
-    st.title("Security Activation - Ask the programmer for your password")
-    st.warning("Send your Machine ID to programmer email : mulham81ahmed@gmail.com ")
+    st.set_page_config(page_title="نظام الأمان والتحقق", layout="centered")
+    st.title("🛡️ تفعيل نظام الأمان الفلكي")
+    st.warning("الرجاء إرسال معرف الجهاز (Machine ID) للمطور للتفعيل: mulham81ahmed@gmail.com")
 
     mid = get_machine_id()
     st.info(f"Machine ID: {mid}")
-    pwd = st.text_input("Enter Activation Key:", type="password")
+    pwd = st.text_input("أدخل مفتاح التفعيل:", type="password")
 
-    if st.button("Activate"):
+    if st.button("تفعيل النظام"):
         if pwd == generate_password(mid):
             with open(KEY_FILE, "w") as f:
                 f.write(pwd)
             st.session_state['authenticated'] = True
             st.rerun()
         else:
-            st.error("Invalid Activation Key.")
+            st.error("مفتاح التفعيل غير صحيح.")
 
     st.stop()
 
