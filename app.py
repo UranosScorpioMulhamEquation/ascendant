@@ -1749,22 +1749,20 @@ header[data-testid="stHeader"]{background:transparent}
 section[data-testid="stSidebar"]{background:linear-gradient(180deg,#0C1328 0%,#080C1B 100%);box-shadow:0 0 50px rgba(0,0,0,.55)}
 section[data-testid="stSidebar"] label,
 section[data-testid="stSidebar"] .stMarkdown,
-section[data-testid="stSidebar"] p,
-section[data-testid="stSidebar"] span:not([data-baseweb="select"] span){color:#DCE6FA}
+section[data-testid="stSidebar"] p{color:#DCE6FA}
 .sb-brand{display:flex;align-items:center;gap:10px;padding:6px 2px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
 .sb-brand span{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:20px;color:#1B1300;background:linear-gradient(135deg,#FBD38D,#F59E0B)}
 .sb-brand b{display:block;font-size:15px;line-height:1.2;color:#fff}
 .sb-brand small{letter-spacing:.2em;font-size:9.5px;color:#93A4CC}
 .sb-h{margin:16px 0 4px;padding:7px 12px;border-radius:10px;font-weight:800;font-size:13.5px;color:var(--gold2);background:linear-gradient(90deg,rgba(245,185,66,.14),rgba(245,185,66,0));border-right:3px solid var(--gold)}
 
-/* ===== صناديق الإدخال باللون الأسود الواضح ===== */
-div[data-testid="stTextInput"] div[data-baseweb="input"],
-div[data-testid="stTextInput"] div[data-baseweb="base-input"],
+/* ===== صناديق الإدخال والتاريخ باللون الأسود الواضح ===== */
+div[data-testid="stDateInput"] > div,
+div[data-testid="stDateInput"] > div > div,
 div[data-testid="stDateInput"] div[data-baseweb="input"],
 div[data-testid="stDateInput"] div[data-baseweb="base-input"],
-div[data-testid="stSelectbox"] div[data-baseweb="select"] > div,
-div[data-baseweb="input"] > div,
-div[data-baseweb="select"] > div,
+div[data-baseweb="input"]>div,
+div[data-baseweb="select"]>div,
 div[data-baseweb="base-input"],
 textarea{
     background-color:#FFFFFF!important;
@@ -1773,10 +1771,9 @@ textarea{
     border-radius:10px!important;
 }
 
-div[data-testid="stTextInput"] input,
 div[data-testid="stDateInput"] input,
-div[data-testid="stSelectbox"] span,
-div[data-testid="stSelectbox"] div,
+div[data-testid="stDateInput"] span,
+div[data-testid="stDateInput"] div,
 div[data-baseweb="input"] input,
 div[data-baseweb="select"] input,
 div[data-baseweb="select"] span,
@@ -1785,14 +1782,13 @@ textarea{
     color:#000000!important;
     -webkit-text-fill-color:#000000!important;
     caret-color:#000000!important;
+    opacity:1!important;
 }
 
-div[data-testid="stTextInput"] input::placeholder,
-div[data-testid="stDateInput"] input::placeholder,
-textarea::placeholder{
+div[data-testid="stDateInput"] svg,
+div[data-baseweb="select"] svg{
     color:#000000!important;
-    -webkit-text-fill-color:#000000!important;
-    opacity:0.75!important;
+    fill:#000000!important;
 }
 
 ul[role="listbox"],
@@ -1802,6 +1798,18 @@ div[data-baseweb="popover"] div[data-baseweb="menu"] *{
     background-color:#FFFFFF!important;
     color:#000000!important;
     -webkit-text-fill-color:#000000!important;
+}
+
+/* ===== صندوق التنبيه باللون الأسود الواضح ===== */
+[data-testid="stAlert"],
+[data-testid="stAlert"] > div,
+[data-testid="stAlert"] p,
+[data-testid="stAlert"] span,
+[data-testid="stAlert"] div{
+    background-color:#FFFFFF!important;
+    color:#000000!important;
+    -webkit-text-fill-color:#000000!important;
+    border-radius:14px!important;
 }
 
 /* ===== زر التنفيذ والتنزيل ===== */
@@ -1867,11 +1875,9 @@ div[data-baseweb="popover"] div[data-baseweb="menu"] *{
 .report-intro{padding:14px 18px;border-radius:14px;margin-bottom:12px;background:linear-gradient(120deg,rgba(124,131,255,.14),rgba(245,185,66,.08));border:1px solid rgba(124,131,255,.32);color:#DCE6FF;line-height:1.9}
 .report-intro small{color:#9FB0D6}
 .app-foot{margin:26px 0 8px;text-align:center;color:#6F7FA5;font-size:12px}
-[data-testid="stAlert"]{border-radius:14px}
 [data-testid="stDataFrame"]{border:1px solid var(--line);border-radius:12px;overflow:hidden}
 </style>
 """
-
 def _stretch(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
     """يستدعي عنصر Streamlit بعرض كامل متوافقًا مع الإصدارات القديمة والجديدة."""
     try:
