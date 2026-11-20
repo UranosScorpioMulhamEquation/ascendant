@@ -1753,9 +1753,9 @@ section[data-testid="stSidebar"] *{color:#DCE6FA}
 .sb-brand b{display:block;font-size:15px;line-height:1.2;color:#fff}
 .sb-brand small{letter-spacing:.2em;font-size:9.5px;color:#93A4CC}
 .sb-h{margin:16px 0 4px;padding:7px 12px;border-radius:10px;font-weight:800;font-size:13.5px;color:var(--gold2);background:linear-gradient(90deg,rgba(245,185,66,.14),rgba(245,185,66,0));border-right:3px solid var(--gold)}
-div[data-baseweb="input"]>div,div[data-baseweb="select"]>div,div[data-baseweb="base-input"],textarea{background:#0F1730!important;border-color:#22305A!important;color:#E8EEF9!important;border-radius:10px!important}
-div[data-baseweb="input"] input,div[data-baseweb="select"] input{color:#E8EEF9!important}
-ul[role="listbox"],div[data-baseweb="popover"] div[data-baseweb="menu"]{background:#0F1730!important;color:#E8EEF9!important}
+div[data-baseweb="input"]>div,div[data-baseweb="select"]>div,div[data-baseweb="base-input"],textarea{background:#0F1730!important;border-color:#22305A!important;color:#000000!important;border-radius:10px!important}
+div[data-baseweb="input"] input,div[data-baseweb="select"] input,div[data-baseweb="select"] span,div[data-baseweb="select"] div,div[data-testid="stDateInput"] input,textarea{color:#000000!important;-webkit-text-fill-color:#000000!important}
+ul[role="listbox"],div[data-baseweb="popover"] div[data-baseweb="menu"]{background:#0F1730!important;color:#000000!important}
 
 /* ===== زر التنفيذ والتنزيل ===== */
 .stButton>button,.stDownloadButton>button{font-family:'Cairo',sans-serif;font-weight:800;border-radius:12px;border:1px solid #2A3866;background:#121B38;color:#E8EEF9;transition:all .18s ease}
