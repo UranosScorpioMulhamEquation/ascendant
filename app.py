@@ -1747,15 +1747,62 @@ header[data-testid="stHeader"]{background:transparent}
 
 /* ===== الشريط الجانبي ===== */
 section[data-testid="stSidebar"]{background:linear-gradient(180deg,#0C1328 0%,#080C1B 100%);box-shadow:0 0 50px rgba(0,0,0,.55)}
-section[data-testid="stSidebar"] *{color:#DCE6FA}
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] .stMarkdown,
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] span:not([data-baseweb="select"] span){color:#DCE6FA}
 .sb-brand{display:flex;align-items:center;gap:10px;padding:6px 2px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
 .sb-brand span{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:20px;color:#1B1300;background:linear-gradient(135deg,#FBD38D,#F59E0B)}
 .sb-brand b{display:block;font-size:15px;line-height:1.2;color:#fff}
 .sb-brand small{letter-spacing:.2em;font-size:9.5px;color:#93A4CC}
 .sb-h{margin:16px 0 4px;padding:7px 12px;border-radius:10px;font-weight:800;font-size:13.5px;color:var(--gold2);background:linear-gradient(90deg,rgba(245,185,66,.14),rgba(245,185,66,0));border-right:3px solid var(--gold)}
-div[data-baseweb="input"]>div,div[data-baseweb="select"]>div,div[data-baseweb="base-input"],textarea{background:#0F1730!important;border-color:#22305A!important;color:#000000!important;border-radius:10px!important}
-div[data-baseweb="input"] input,div[data-baseweb="select"] input,div[data-baseweb="select"] span,div[data-baseweb="select"] div,div[data-testid="stDateInput"] input,textarea{color:#000000!important;-webkit-text-fill-color:#000000!important}
-ul[role="listbox"],div[data-baseweb="popover"] div[data-baseweb="menu"]{background:#0F1730!important;color:#000000!important}
+
+/* ===== صناديق الإدخال باللون الأسود الواضح ===== */
+div[data-testid="stTextInput"] div[data-baseweb="input"],
+div[data-testid="stTextInput"] div[data-baseweb="base-input"],
+div[data-testid="stDateInput"] div[data-baseweb="input"],
+div[data-testid="stDateInput"] div[data-baseweb="base-input"],
+div[data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+div[data-baseweb="input"] > div,
+div[data-baseweb="select"] > div,
+div[data-baseweb="base-input"],
+textarea{
+    background-color:#FFFFFF!important;
+    border-color:#22305A!important;
+    color:#000000!important;
+    border-radius:10px!important;
+}
+
+div[data-testid="stTextInput"] input,
+div[data-testid="stDateInput"] input,
+div[data-testid="stSelectbox"] span,
+div[data-testid="stSelectbox"] div,
+div[data-baseweb="input"] input,
+div[data-baseweb="select"] input,
+div[data-baseweb="select"] span,
+div[data-baseweb="select"] div,
+textarea{
+    color:#000000!important;
+    -webkit-text-fill-color:#000000!important;
+    caret-color:#000000!important;
+}
+
+div[data-testid="stTextInput"] input::placeholder,
+div[data-testid="stDateInput"] input::placeholder,
+textarea::placeholder{
+    color:#000000!important;
+    -webkit-text-fill-color:#000000!important;
+    opacity:0.75!important;
+}
+
+ul[role="listbox"],
+ul[role="listbox"] li,
+div[data-baseweb="popover"] div[data-baseweb="menu"],
+div[data-baseweb="popover"] div[data-baseweb="menu"] *{
+    background-color:#FFFFFF!important;
+    color:#000000!important;
+    -webkit-text-fill-color:#000000!important;
+}
 
 /* ===== زر التنفيذ والتنزيل ===== */
 .stButton>button,.stDownloadButton>button{font-family:'Cairo',sans-serif;font-weight:800;border-radius:12px;border:1px solid #2A3866;background:#121B38;color:#E8EEF9;transition:all .18s ease}
@@ -1824,7 +1871,6 @@ ul[role="listbox"],div[data-baseweb="popover"] div[data-baseweb="menu"]{backgrou
 [data-testid="stDataFrame"]{border:1px solid var(--line);border-radius:12px;overflow:hidden}
 </style>
 """
-
 
 def _stretch(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
     """يستدعي عنصر Streamlit بعرض كامل متوافقًا مع الإصدارات القديمة والجديدة."""
